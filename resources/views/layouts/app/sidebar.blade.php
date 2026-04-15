@@ -11,9 +11,17 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                <flux:sidebar.group :heading="__('Plataforma')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item
+                        icon="users"
+                        :href="route('customers.index')"
+                        :current="request()->routeIs('customers.*') || request()->routeIs('vehicles.*')"
+                        wire:navigate
+                    >
+                        {{ __('Clientes') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
