@@ -45,7 +45,11 @@ new #[Title('Novo Cliente')] class extends Component {
 
     public function save(): void
     {
-        $this->validate($this->step1Rules() + $this->step2Rules());
+        $rules = $this->step1Rules();
+        if ($this->hasAddressData()) {
+            $rules += $this->step2Rules();
+        }
+        $this->validate($rules);
 
         try {
             DB::transaction(function () {
@@ -58,16 +62,18 @@ new #[Title('Novo Cliente')] class extends Component {
                     'birth_date' => Carbon::createFromFormat('d/m/Y', $this->birth_date)->toDateString(),
                 ]);
 
-                $customer->addresses()->create([
-                    'street' => $this->street,
-                    'zip_code' => $this->zip_code,
-                    'neighborhood' => $this->neighborhood,
-                    'state' => strtoupper($this->state),
-                    'city' => $this->city,
-                    'number' => $this->number,
-                    'complement' => $this->complement ?: null,
-                    'status' => true,
-                ]);
+                if ($this->hasAddressData()) {
+                    $customer->addresses()->create([
+                        'street' => $this->street,
+                        'zip_code' => $this->zip_code,
+                        'neighborhood' => $this->neighborhood,
+                        'state' => strtoupper($this->state),
+                        'city' => $this->city,
+                        'number' => $this->number,
+                        'complement' => $this->complement ?: null,
+                        'status' => true,
+                    ]);
+                }
             });
 
             Flux::toast(variant: 'success', text: __('Cliente cadastrado com sucesso.'));
@@ -76,6 +82,11 @@ new #[Title('Novo Cliente')] class extends Component {
             Log::error('Customer creation failed', ['error' => $e->getMessage()]);
             Flux::toast(variant: 'danger', text: __('Erro ao cadastrar cliente. Tente novamente.'));
         }
+    }
+
+    private function hasAddressData(): bool
+    {
+        return (bool) ($this->street || $this->zip_code || $this->neighborhood || $this->city || $this->number || $this->state);
     }
 }; ?>
 
@@ -172,7 +183,10 @@ new #[Title('Novo Cliente')] class extends Component {
             </div>
         @elseif ($currentStep === 2)
             <div wire:key="step-2" class="contents">
-            <flux:heading>{{ __('Endereço') }}</flux:heading>
+            <div>
+                <flux:heading>{{ __('Endereço (opcional)') }}</flux:heading>
+                <flux:text class="mt-1 text-zinc-500">{{ __('Preencha abaixo ou deixe em branco para cadastrar sem endereço.') }}</flux:text>
+            </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
@@ -180,7 +194,6 @@ new #[Title('Novo Cliente')] class extends Component {
                         wire:model.blur="street"
                         :label="__('Logradouro')"
                         :placeholder="__('Rua, Avenida, etc.')"
-                        required
                     />
                 </div>
 
@@ -189,14 +202,12 @@ new #[Title('Novo Cliente')] class extends Component {
                     x-on:input="maskCep($el)"
                     :label="__('CEP')"
                     placeholder="00000-000"
-                    required
                 />
 
                 <flux:input
                     wire:model.blur="number"
                     :label="__('Número')"
                     placeholder="123"
-                    required
                 />
 
                 <div class="sm:col-span-2">
@@ -210,13 +221,11 @@ new #[Title('Novo Cliente')] class extends Component {
                 <flux:input
                     wire:model.blur="neighborhood"
                     :label="__('Bairro')"
-                    required
                 />
 
                 <flux:input
                     wire:model.blur="city"
                     :label="__('Cidade')"
-                    required
                 />
 
                 <flux:input
@@ -224,7 +233,6 @@ new #[Title('Novo Cliente')] class extends Component {
                     :label="__('Estado (UF)')"
                     placeholder="SP"
                     maxlength="2"
-                    required
                 />
             </div>
 

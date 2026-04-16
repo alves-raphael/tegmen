@@ -76,7 +76,11 @@ new #[Title('Editar Cliente')] class extends Component {
 
     public function save(): void
     {
-        $this->validate($this->step1Rules() + $this->step2Rules());
+        $rules = $this->step1Rules();
+        if ($this->hasAddressData()) {
+            $rules += $this->step2Rules();
+        }
+        $this->validate($rules);
 
         if (! $this->customer->belongsToUser(Auth::id())) {
             Log::warning('Unauthorized customer update attempt', [
@@ -108,8 +112,17 @@ new #[Title('Editar Cliente')] class extends Component {
         }
     }
 
+    private function hasAddressData(): bool
+    {
+        return (bool) ($this->street || $this->zip_code || $this->neighborhood || $this->city || $this->number || $this->state);
+    }
+
     private function updateAddress(): void
     {
+        if (! $this->hasAddressData()) {
+            return;
+        }
+
         $addressData = [
             'street' => $this->street,
             'zip_code' => $this->zip_code,
@@ -225,7 +238,10 @@ new #[Title('Editar Cliente')] class extends Component {
             </div>
         @elseif ($currentStep === 2)
             <div wire:key="step-2" class="contents">
-            <flux:heading>{{ __('Endereço') }}</flux:heading>
+            <div>
+                <flux:heading>{{ __('Endereço (opcional)') }}</flux:heading>
+                <flux:text class="mt-1 text-zinc-500">{{ __('Preencha abaixo ou deixe em branco para salvar sem endereço.') }}</flux:text>
+            </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
@@ -233,7 +249,6 @@ new #[Title('Editar Cliente')] class extends Component {
                         wire:model.blur="street"
                         :label="__('Logradouro')"
                         :placeholder="__('Rua, Avenida, etc.')"
-                        required
                     />
                 </div>
 
@@ -242,14 +257,12 @@ new #[Title('Editar Cliente')] class extends Component {
                     x-on:input="maskCep($el)"
                     :label="__('CEP')"
                     placeholder="00000-000"
-                    required
                 />
 
                 <flux:input
                     wire:model.blur="number"
                     :label="__('Número')"
                     placeholder="123"
-                    required
                 />
 
                 <div class="sm:col-span-2">
@@ -263,13 +276,11 @@ new #[Title('Editar Cliente')] class extends Component {
                 <flux:input
                     wire:model.blur="neighborhood"
                     :label="__('Bairro')"
-                    required
                 />
 
                 <flux:input
                     wire:model.blur="city"
                     :label="__('Cidade')"
-                    required
                 />
 
                 <flux:input
@@ -277,7 +288,6 @@ new #[Title('Editar Cliente')] class extends Component {
                     :label="__('Estado (UF)')"
                     placeholder="SP"
                     maxlength="2"
-                    required
                 />
             </div>
 

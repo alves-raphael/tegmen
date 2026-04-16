@@ -65,6 +65,26 @@ test('unauthorized access attempt is logged', function () {
         ->test('pages::customers.edit', ['customer' => $customer]);
 });
 
+test('save without address data leaves existing address unchanged', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $address = Address::factory()->create(['customer_id' => $customer->id, 'status' => true]);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.edit', ['customer' => $customer])
+        ->set('street', '')
+        ->set('zip_code', '')
+        ->set('neighborhood', '')
+        ->set('city', '')
+        ->set('state', '')
+        ->set('number', '')
+        ->call('nextStep')
+        ->call('save');
+
+    expect($address->fresh()->status)->toBeTrue();
+    expect(Address::where('customer_id', $customer->id)->where('status', true)->count())->toBe(1);
+});
+
 test('successful update changes customer fields', function () {
     $user = User::factory()->create();
     $customer = Customer::factory()->create(['user_id' => $user->id]);

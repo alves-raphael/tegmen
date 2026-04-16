@@ -118,7 +118,7 @@ test('previousStep returns to step 1', function () {
         ->assertSet('currentStep', 1);
 });
 
-test('save validates step 2 address fields', function () {
+test('save validates step 2 address fields when partial data is provided', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
@@ -129,8 +129,27 @@ test('save validates step 2 address fields', function () {
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
         ->call('nextStep')
+        ->set('street', 'Rua das Flores')
         ->call('save')
-        ->assertHasErrors(['street', 'zip_code', 'city', 'state', 'number', 'neighborhood']);
+        ->assertHasErrors(['zip_code', 'city', 'state', 'number', 'neighborhood']);
+});
+
+test('save without address creates customer with no address records', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('name', 'João Silva')
+        ->set('cpf', '529.982.247-25')
+        ->set('email', 'joao@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->set('birth_date', '15/01/1990')
+        ->call('nextStep')
+        ->call('save');
+
+    $customer = Customer::where('email', 'joao@example.com')->first();
+    expect($customer)->not->toBeNull();
+    expect(Address::where('customer_id', $customer->id)->count())->toBe(0);
 });
 
 test('successful save creates customer and address', function () {
