@@ -150,7 +150,7 @@ new #[Title('Novo Veículo')] class extends Component {
         </div>
 
         <div class="flex justify-end">
-            <flux:button variant="primary" wire:click="save">
+            <flux:button variant="primary" wire:click="save" x-submit-guard>
                 {{ __('Salvar Veículo') }}
             </flux:button>
         </div>

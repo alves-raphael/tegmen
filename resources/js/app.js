@@ -87,3 +87,37 @@ window.maskLicensePlate = function (el) {
     const newPos = Math.max(0, pos + diff);
     el.setSelectionRange(newPos, newPos);
 };
+
+/**
+ * Submit guard directive: disables a button for 3 seconds after the first click.
+ * Usage: add x-submit-guard to any <flux:button> or <button> element.
+ */
+document.addEventListener('alpine:init', () => {
+    Alpine.directive('submit-guard', (el, _params, { cleanup }) => {
+        let locked = false;
+
+        const preventIfLocked = (e) => {
+            if (!locked) return;
+            e.stopPropagation();
+            e.preventDefault();
+        };
+
+        const lockOnClick = () => {
+            if (locked) return;
+            locked = true;
+            el.classList.add('!opacity-60', 'cursor-not-allowed');
+            setTimeout(() => {
+                locked = false;
+                el.classList.remove('!opacity-60', 'cursor-not-allowed');
+            }, 3000);
+        };
+
+        el.addEventListener('click', preventIfLocked, true); // capture — blocks second clicks
+        el.addEventListener('click', lockOnClick);           // bubble — locks after action fires
+
+        cleanup(() => {
+            el.removeEventListener('click', preventIfLocked, true);
+            el.removeEventListener('click', lockOnClick);
+        });
+    });
+});

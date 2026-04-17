@@ -77,6 +77,7 @@
                         variant="primary"
                         type="submit"
                         class="w-full"
+                        x-submit-guard
                     >
                         {{ __('Continue') }}
                     </flux:button>

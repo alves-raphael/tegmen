@@ -240,7 +240,7 @@ new #[Title('Novo Cliente')] class extends Component {
                 <flux:button variant="ghost" wire:click="previousStep">
                     {{ __('Voltar') }}
                 </flux:button>
-                <flux:button variant="primary" wire:click="save">
+                <flux:button variant="primary" wire:click="save" x-submit-guard>
                     {{ __('Salvar Cliente') }}
                 </flux:button>
             </div>

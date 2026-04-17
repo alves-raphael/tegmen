@@ -174,7 +174,7 @@ new #[Title('Editar Veículo')] class extends Component {
         </div>
 
         <div class="flex justify-end">
-            <flux:button variant="primary" wire:click="save">
+            <flux:button variant="primary" wire:click="save" x-submit-guard>
                 {{ __('Salvar Alterações') }}
             </flux:button>
         </div>

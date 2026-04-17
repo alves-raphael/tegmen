@@ -160,7 +160,7 @@ new #[Title('Editar Apólice')] class extends Component {
         @include('pages.policies._form', ['readonly' => true])
 
         <div class="flex justify-end">
-            <flux:button variant="primary" wire:click="save" wire:loading.attr="disabled">
+            <flux:button variant="primary" wire:click="save" wire:loading.attr="disabled" x-submit-guard>
                 {{ __('Salvar Alterações') }}
             </flux:button>
         </div>

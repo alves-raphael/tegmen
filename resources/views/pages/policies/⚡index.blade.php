@@ -216,7 +216,7 @@ new #[Title('Apólices')] class extends Component {
                 <flux:button variant="ghost" wire:click="closeCancelModal">
                     {{ __('Voltar') }}
                 </flux:button>
-                <flux:button variant="danger" wire:click="cancelPolicy" wire:loading.attr="disabled">
+                <flux:button variant="danger" wire:click="cancelPolicy" wire:loading.attr="disabled" x-submit-guard>
                     {{ __('Confirmar Cancelamento') }}
                 </flux:button>
             </div>
