@@ -23,6 +23,14 @@
                     >
                         {{ __('Clientes') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item
+                        icon="document-text"
+                        :href="route('policies.index')"
+                        :current="request()->routeIs('policies.*')"
+                        wire:navigate
+                    >
+                        {{ __('Apólices') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

@@ -52,6 +52,22 @@ window.maskCep = function (el) {
     el.setSelectionRange(newPos, newPos);
 };
 
+window.maskCurrency = function (el) {
+    const pos = el.selectionStart;
+    const raw = el.value.replace(/\D/g, '');
+    if (!raw) {
+        el.value = '';
+        return;
+    }
+    const num = (parseInt(raw, 10) / 100).toFixed(2);
+    const [intPart, decPart] = num.split('.');
+    const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + decPart;
+    el.value = formatted;
+    // Keep cursor near the end
+    const newPos = el.value.length - (el.value.length - pos > 3 ? 0 : 0);
+    el.setSelectionRange(newPos, newPos);
+};
+
 window.maskLicensePlate = function (el) {
     const pos = el.selectionStart;
     const prev = el.value;
