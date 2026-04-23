@@ -140,6 +140,7 @@ jobs:
 
             mkdir -p "$RELEASE_DIR"
             tar -xzf "/var/www/tegmen/releases/$ARTIFACT_NAME" -C "$RELEASE_DIR"
+            rm -f "/var/www/tegmen/releases/$ARTIFACT_NAME"
 
             # Symlink shared files (.env, storage)
             rm -rf "$RELEASE_DIR/storage"
