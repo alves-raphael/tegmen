@@ -80,11 +80,22 @@ jobs:
       - name: Prepare Production Artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          set -euo pipefail
+
           composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-          tar -czf "$ARTIFACT_NAME" \
+          STAGING_DIR="$(mktemp -d)"
+          rsync -a --delete \
             --exclude=node_modules \
             --exclude=.git \
-            .
+            --exclude=.github \
+            --exclude=.env \
+            --exclude=storage/logs \
+            --exclude=storage/framework/cache \
+            --exclude=storage/framework/sessions \
+            --exclude=storage/framework/views \
+            ./ "$STAGING_DIR/"
+
+          tar -C "$STAGING_DIR" -czf "$ARTIFACT_NAME" .
 
       - name: Upload Production Artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

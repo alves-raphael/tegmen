@@ -1,5 +1,11 @@
 # State
 
+## 2026-04-23 — CI artifact packaging snapshot fix
+
+- Updated `tests.yml` artifact step to use `set -euo pipefail`
+- Staged deploy artifact from a `mktemp` snapshot via `rsync` before `tar`
+- Excluded `.git`, `node_modules`, `.github`, `.env`, and transient `storage/framework` + `storage/logs` paths from artifact snapshot
+
 ## 2026-04-22 — CI/CD workflow hardening
 
 - Added workflow `concurrency` per branch to avoid overlapping/stale runs
