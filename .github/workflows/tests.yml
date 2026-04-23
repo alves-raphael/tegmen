@@ -90,10 +90,7 @@ jobs:
             --exclude=.git \
             --exclude=.github \
             --exclude=.env \
-            --exclude=storage/logs \
-            --exclude=storage/framework/cache \
-            --exclude=storage/framework/sessions \
-            --exclude=storage/framework/views \
+            --exclude=storage \
             ./ "$STAGING_DIR/"
 
           tar -C "$STAGING_DIR" -czf "$ARTIFACT_NAME" .
@@ -145,6 +142,7 @@ jobs:
             tar -xzf "/var/www/tegmen/releases/$ARTIFACT_NAME" -C "$RELEASE_DIR"
 
             # Symlink shared files (.env, storage)
+            rm -rf "$RELEASE_DIR/storage"
             ln -sfn /var/www/tegmen/shared/.env "$RELEASE_DIR/.env"
             ln -sfn /var/www/tegmen/shared/storage "$RELEASE_DIR/storage"
 
