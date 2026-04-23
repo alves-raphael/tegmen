@@ -126,7 +126,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "${{ env.ARTIFACT_NAME }}"
-          target: "/var/www/releases"
+          target: "/var/www/tegmen/releases"
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -139,20 +139,20 @@ jobs:
 
             ARTIFACT_NAME="${{ env.ARTIFACT_NAME }}"
 
-            RELEASE_DIR=/var/www/releases/$(date +%s)
+            RELEASE_DIR=/var/www/tegmen/releases/$(date +%s)
 
             mkdir -p "$RELEASE_DIR"
-            tar -xzf "/var/www/releases/$ARTIFACT_NAME" -C "$RELEASE_DIR"
+            tar -xzf "/var/www/tegmen/releases/$ARTIFACT_NAME" -C "$RELEASE_DIR"
 
             # Symlink shared files (.env, storage)
-            ln -sfn /var/www/shared/.env "$RELEASE_DIR/.env"
-            ln -sfn /var/www/shared/storage "$RELEASE_DIR/storage"
+            ln -sfn /var/www/tegmen/shared/.env "$RELEASE_DIR/.env"
+            ln -sfn /var/www/tegmen/shared/storage "$RELEASE_DIR/storage"
 
             # Switch current release
-            ln -sfn "$RELEASE_DIR" /var/www/current
+            ln -sfn "$RELEASE_DIR" /var/www/tegmen/current
 
             # Warm caches using production environment after .env is linked
-            cd /var/www/current
+            cd /var/www/tegmen/current
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
