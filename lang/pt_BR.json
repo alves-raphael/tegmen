@@ -1,0 +1,50 @@
+{
+    "Log in": "Entrar",
+    "Log in to your account": "Entrar na sua conta",
+    "Enter your email and password below to log in": "Digite seu e-mail e senha abaixo para entrar",
+    "Email address": "E-mail",
+    "Email": "E-mail",
+    "Password": "Senha",
+    "Forgot your password?": "Esqueceu sua senha?",
+    "Remember me": "Lembrar de mim",
+    "Don't have an account?": "Não tem uma conta?",
+    "Sign up": "Cadastre-se",
+
+    "Register": "Cadastro",
+    "Create an account": "Criar uma conta",
+    "Enter your details below to create your account": "Preencha os dados abaixo para criar sua conta",
+    "Name": "Nome",
+    "Full name": "Nome completo",
+    "Confirm password": "Confirmar senha",
+    "Create account": "Criar conta",
+    "Already have an account?": "Já tem uma conta?",
+
+    "Forgot password": "Esqueci minha senha",
+    "Enter your email to receive a password reset link": "Digite seu e-mail para receber o link de redefinição de senha",
+    "Email password reset link": "Enviar link de redefinição",
+    "Or, return to": "Ou, voltar para",
+    "log in": "entrar",
+
+    "Reset password": "Redefinir senha",
+    "Please enter your new password below": "Por favor, digite sua nova senha abaixo",
+
+    "Email verification": "Verificação de e-mail",
+    "Please verify your email address by clicking on the link we just emailed to you.": "Por favor, verifique seu endereço de e-mail clicando no link que enviamos para você.",
+    "A new verification link has been sent to the email address you provided during registration.": "Um novo link de verificação foi enviado para o endereço de e-mail fornecido durante o cadastro.",
+    "Resend verification email": "Reenviar e-mail de verificação",
+    "Log out": "Sair",
+
+    "Confirm password": "Confirmar senha",
+    "This is a secure area of the application. Please confirm your password before continuing.": "Esta é uma área segura. Por favor, confirme sua senha antes de continuar.",
+    "Confirm": "Confirmar",
+
+    "Two-factor authentication": "Autenticação em dois fatores",
+    "Authentication code": "Código de autenticação",
+    "Enter the authentication code provided by your authenticator application.": "Digite o código de autenticação fornecido pelo seu aplicativo autenticador.",
+    "Recovery code": "Código de recuperação",
+    "Please confirm access to your account by entering one of your emergency recovery codes.": "Por favor, confirme o acesso à sua conta digitando um dos seus códigos de recuperação de emergência.",
+    "Continue": "Continuar",
+    "or you can": "ou você pode",
+    "login using a recovery code": "entrar usando um código de recuperação",
+    "login using an authentication code": "entrar usando um código de autenticação"
+}
