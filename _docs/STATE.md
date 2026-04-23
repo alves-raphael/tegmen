@@ -1,5 +1,20 @@
 # State
 
+## 2026-04-22 — CI/CD workflow hardening
+
+- Added workflow `concurrency` per branch to avoid overlapping/stale runs
+- Restricted `build-deploy` execution to pushes on `main`
+- Removed CI xdebug coverage in test job to reduce runtime overhead
+- Switched deploy artifact to unique name (`app-${{ github.run_id }}.tar.gz`) to avoid overwrite races
+- Removed build-time Laravel cache generation from CI artifact
+- Moved `optimize:clear`, `config:cache`, `route:cache`, and `view:cache` to server-side deploy after `.env` symlink
+
+## 2026-04-22 — Reuse CI artifact for deployment
+
+- `ci` now prepares and uploads a production artifact on `push` to `main`
+- `build-deploy` now downloads that artifact instead of rebuilding dependencies/assets
+- Removed duplicate `npm ci`/`npm run build` and production `composer install` from deploy job
+
 ## 2026-04-15 — CRUD Customer, Insurance Company Seeder, CRUD Vehicles
 
 - Added `customers`, `addresses`, `insurance_companies`, `vehicles` migrations and models
