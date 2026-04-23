@@ -84,6 +84,7 @@ jobs:
 
           composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
           STAGING_DIR="$(mktemp -d)"
+          trap 'rm -rf "$STAGING_DIR"' EXIT
           rsync -a --delete \
             --exclude=node_modules \
             --exclude=.git \

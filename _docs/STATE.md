@@ -4,6 +4,7 @@
 
 - Updated `tests.yml` artifact step to use `set -euo pipefail`
 - Staged deploy artifact from a `mktemp` snapshot via `rsync` before `tar`
+- Added `trap` cleanup for the temporary staging directory
 - Excluded `.git`, `node_modules`, `.github`, `.env`, and transient `storage/framework` + `storage/logs` paths from artifact snapshot
 
 ## 2026-04-22 — CI/CD workflow hardening
