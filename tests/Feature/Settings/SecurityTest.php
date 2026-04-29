@@ -21,7 +21,7 @@ test('security settings page can be rendered', function () {
         ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('security.edit'))
         ->assertOk()
-        ->assertSee('Two-factor authentication')
+        ->assertSee('Autenticação em dois fatores')
         ->assertSee('Enable 2FA');
 });
 
