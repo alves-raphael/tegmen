@@ -167,6 +167,92 @@ test('status badges have correct colors', function () {
         ->and(PolicyStatus::Expired->badgeColor())->toBe('red');
 });
 
+test('insurer filter shows only policies from the selected insurer', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $otherInsurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    $myPolicy = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+    ]);
+
+    $otherPolicy = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $otherInsurer->id,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('statusFilter', '')
+        ->set('insurerFilter', $insurer->id)
+        ->assertSee($myPolicy->policy_number)
+        ->assertDontSee($otherPolicy->policy_number);
+});
+
+test('insurer filter dropdown only lists insurers the user has policies with', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $myInsurer = InsuranceCompany::factory()->create();
+    $otherInsurer = InsuranceCompany::factory()->create();
+
+    $myCustomer = Customer::factory()->create(['user_id' => $user->id]);
+    $myVehicle = Vehicle::factory()->create(['customer_id' => $myCustomer->id]);
+    Policy::factory()->active()->create([
+        'customer_id' => $myCustomer->id,
+        'vehicle_id' => $myVehicle->id,
+        'insurer_id' => $myInsurer->id,
+    ]);
+
+    $otherCustomer = Customer::factory()->create(['user_id' => $otherUser->id]);
+    $otherVehicle = Vehicle::factory()->create(['customer_id' => $otherCustomer->id]);
+    Policy::factory()->active()->create([
+        'customer_id' => $otherCustomer->id,
+        'vehicle_id' => $otherVehicle->id,
+        'insurer_id' => $otherInsurer->id,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::policies.index');
+    $insurerIds = $component->instance()->insurers->pluck('id');
+
+    expect($insurerIds)->toContain($myInsurer->id)
+        ->and($insurerIds)->not->toContain($otherInsurer->id);
+});
+
+test('clearing insurer filter shows all policies again', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $otherInsurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    $policy = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+    ]);
+
+    $otherPolicy = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $otherInsurer->id,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('insurerFilter', $insurer->id)
+        ->assertSee($policy->policy_number)
+        ->assertDontSee($otherPolicy->policy_number)
+        ->set('insurerFilter', '')
+        ->assertSee($policy->policy_number)
+        ->assertSee($otherPolicy->policy_number);
+});
+
 test('all status filter shows all policies regardless of status', function () {
     $user = User::factory()->create();
     $insurer = InsuranceCompany::factory()->create();

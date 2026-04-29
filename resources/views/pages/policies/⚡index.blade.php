@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\PolicyStatus;
+use App\Models\InsuranceCompany;
 use App\Models\Policy;
 use Flux\Flux;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +18,8 @@ new #[Title('Apólices')] class extends Component {
 
     public string $statusFilter = 'ACTIVE';
 
+    public string $insurerFilter = '';
+
     public bool $showCancelModal = false;
 
     public ?int $cancellingPolicyId = null;
@@ -23,6 +27,23 @@ new #[Title('Apólices')] class extends Component {
     public function updatedStatusFilter(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedInsurerFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * @return Collection<int, InsuranceCompany>
+     */
+    #[Computed]
+    public function insurers(): Collection
+    {
+        return InsuranceCompany::query()
+            ->whereHas('policies.customer', fn ($q) => $q->where('user_id', Auth::id()))
+            ->orderBy('name')
+            ->get();
     }
 
     /**
@@ -37,6 +58,10 @@ new #[Title('Apólices')] class extends Component {
             ->when(
                 $this->statusFilter !== '',
                 fn ($q) => $q->where('status', $this->statusFilter)
+            )
+            ->when(
+                $this->insurerFilter !== '',
+                fn ($q) => $q->where('insurer_id', $this->insurerFilter)
             )
             ->orderBy('end_date', 'asc')
             ->paginate(15);
@@ -104,14 +129,25 @@ new #[Title('Apólices')] class extends Component {
         </flux:button>
     </div>
 
-    <div class="w-full sm:w-64">
-        <flux:select wire:model.live="statusFilter" :label="__('Status')">
-            <flux:select.option value="">{{ __('Todos os status') }}</flux:select.option>
-            <flux:select.option value="ACTIVE">{{ __('Ativas') }}</flux:select.option>
-            <flux:select.option value="RENEWED">{{ __('Renovadas') }}</flux:select.option>
-            <flux:select.option value="CANCELLED">{{ __('Canceladas') }}</flux:select.option>
-            <flux:select.option value="EXPIRED">{{ __('Expiradas') }}</flux:select.option>
-        </flux:select>
+    <div class="flex flex-col gap-4 sm:flex-row">
+        <div class="w-full sm:w-52">
+            <flux:select wire:model.live="statusFilter" :label="__('Status')">
+                <flux:select.option value="">{{ __('Todos os status') }}</flux:select.option>
+                <flux:select.option value="ACTIVE">{{ __('Ativas') }}</flux:select.option>
+                <flux:select.option value="RENEWED">{{ __('Renovadas') }}</flux:select.option>
+                <flux:select.option value="CANCELLED">{{ __('Canceladas') }}</flux:select.option>
+                <flux:select.option value="EXPIRED">{{ __('Expiradas') }}</flux:select.option>
+            </flux:select>
+        </div>
+
+        <div class="w-full sm:w-64">
+            <flux:select wire:model.live="insurerFilter" :label="__('Seguradora')">
+                <flux:select.option value="">{{ __('Todas as seguradoras') }}</flux:select.option>
+                @foreach ($this->insurers as $insurer)
+                    <flux:select.option :value="$insurer->id">{{ $insurer->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </div>
     </div>
 
     <div class="overflow-x-auto">
