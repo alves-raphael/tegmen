@@ -18,10 +18,18 @@
                     <flux:sidebar.item
                         icon="users"
                         :href="route('customers.index')"
-                        :current="request()->routeIs('customers.*') || request()->routeIs('vehicles.*')"
+                        :current="request()->routeIs('customers.*')"
                         wire:navigate
                     >
                         {{ __('Clientes') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item
+                        icon="truck"
+                        :href="route('vehicles.list')"
+                        :current="request()->routeIs('vehicles.*')"
+                        wire:navigate
+                    >
+                        {{ __('Veículos') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item
                         icon="document-text"
