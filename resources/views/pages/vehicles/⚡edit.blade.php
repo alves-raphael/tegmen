@@ -103,7 +103,7 @@ new #[Title('Editar Veículo')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl space-y-6">
+<div class="mx-auto max-w-2xl space-y-6" x-data="{ dirty: false }">
     <div class="flex items-center gap-4">
         <flux:button variant="ghost" icon="arrow-left" :href="route('vehicles.index', $customer)" wire:navigate />
         <div>
@@ -112,7 +112,7 @@ new #[Title('Editar Veículo')] class extends Component {
         </div>
     </div>
 
-    <flux:card class="space-y-6">
+    <flux:card class="space-y-6" @input="dirty = true" @change="dirty = true">
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input
                 wire:model.blur="license_plate"
@@ -174,9 +174,24 @@ new #[Title('Editar Veículo')] class extends Component {
         </div>
 
         <div class="flex justify-end">
-            <flux:button variant="primary" wire:click="save" x-submit-guard>
-                {{ __('Salvar Alterações') }}
-            </flux:button>
+            <div
+                class="relative inline-flex"
+                x-bind:class="{ 'cursor-not-allowed': !dirty }"
+                @mouseenter="if (!dirty) $refs.saveTip.removeAttribute('hidden')"
+                @mouseleave="$refs.saveTip.setAttribute('hidden', '')"
+            >
+                <div
+                    x-ref="saveTip"
+                    hidden
+                    role="tooltip"
+                    class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-800 px-2.5 py-2 text-xs font-medium text-white dark:bg-zinc-700 dark:border dark:border-white/10"
+                >
+                    {{ __('Nenhuma alteração foi feita') }}
+                </div>
+                <flux:button variant="primary" wire:click="save" x-submit-guard x-bind:disabled="!dirty">
+                    {{ __('Salvar Alterações') }}
+                </flux:button>
+            </div>
         </div>
     </flux:card>
 </div>
