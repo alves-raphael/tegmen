@@ -352,3 +352,60 @@ test('renewal mismatch shows danger toast and does not save', function () {
     expect(Policy::count())->toBe($initialPolicyCount)
         ->and($origin->fresh()->status)->toBe(PolicyStatus::Active);
 });
+
+test('policy_number must be unique per insurer', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    Policy::factory()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'policy_number' => 'POL-DUPLICATE',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.create')
+        ->set('policy_number', 'POL-DUPLICATE')
+        ->set('customer_id', (string) $customer->id)
+        ->set('vehicle_id', (string) $vehicle->id)
+        ->set('insurer_id', (string) $insurer->id)
+        ->set('start_date', '01/01/2026')
+        ->set('end_date', now()->addYear()->format('d/m/Y'))
+        ->set('premium', '1500,00')
+        ->call('save')
+        ->assertHasErrors(['policy_number' => 'unique']);
+});
+
+test('same policy_number is allowed for a different insurer', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $otherInsurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    Policy::factory()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'policy_number' => 'POL-SHARED',
+    ]);
+
+    $initialCount = Policy::count();
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.create')
+        ->set('policy_number', 'POL-SHARED')
+        ->set('customer_id', (string) $customer->id)
+        ->set('vehicle_id', (string) $vehicle->id)
+        ->set('insurer_id', (string) $otherInsurer->id)
+        ->set('start_date', '01/01/2026')
+        ->set('end_date', now()->addYear()->format('d/m/Y'))
+        ->set('premium', '1500,00')
+        ->call('save')
+        ->assertHasNoErrors('policy_number');
+
+    expect(Policy::count())->toBe($initialCount + 1);
+});

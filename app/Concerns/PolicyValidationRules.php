@@ -2,6 +2,8 @@
 
 namespace App\Concerns;
 
+use Illuminate\Validation\Rule;
+
 trait PolicyValidationRules
 {
     /**
@@ -24,7 +26,13 @@ trait PolicyValidationRules
     protected function policyRules(): array
     {
         return [
-            'policy_number' => ['required', 'string', 'max:50'],
+            'policy_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('policies', 'policy_number')
+                    ->where('insurer_id', (int) $this->insurer_id),
+            ],
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'insurer_id' => ['required', 'integer', 'exists:insurance_companies,id'],
