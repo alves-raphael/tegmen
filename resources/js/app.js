@@ -68,6 +68,22 @@ window.maskCurrency = function (el) {
     el.setSelectionRange(newPos, newPos);
 };
 
+window.prefillEndDate = function (startEl) {
+    const endEl = document.querySelector('[wire\\:model\\.blur="end_date"]');
+    if (!endEl || endEl.value) return;
+
+    const raw = startEl.value.replace(/\D/g, '');
+    if (raw.length !== 8) return;
+
+    const day = raw.slice(0, 2);
+    const month = raw.slice(2, 4);
+    const year = parseInt(raw.slice(4, 8), 10);
+
+    endEl.value = `${day}/${month}/${year + 1}`;
+    endEl.dispatchEvent(new Event('input', { bubbles: true }));
+    endEl.dispatchEvent(new Event('blur', { bubbles: true }));
+};
+
 window.maskLicensePlate = function (el) {
     const pos = el.selectionStart;
     const prev = el.value;

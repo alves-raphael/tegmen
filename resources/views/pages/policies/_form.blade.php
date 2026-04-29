@@ -63,6 +63,7 @@
     <flux:input
         wire:model.blur="start_date"
         x-on:input="{{ $readonly ? '' : 'maskDate($el)' }}"
+        x-on:blur="{{ $readonly ? '' : 'prefillEndDate($el)' }}"
         :label="__('Data de início')"
         placeholder="DD/MM/AAAA"
         :disabled="$readonly"
