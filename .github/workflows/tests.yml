@@ -29,6 +29,20 @@ jobs:
       matrix:
         php-version: ['8.3']
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -68,11 +82,23 @@ jobs:
       - name: Copy Environment File
         run: cp .env.example .env
 
+      - name: Configure Test Database
+        run: |
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+          sed -i 's/^# *DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/^# *DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/^# *DB_DATABASE=.*/DB_DATABASE=testing/' .env
+          sed -i 's/^# *DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^# *DB_PASSWORD=.*/DB_PASSWORD=password/' .env
+
       - name: Generate Application Key
         run: php artisan key:generate
 
       - name: Build Assets
         run: npm run build
+
+      - name: Run Migrations
+        run: php artisan migrate --force
 
       - name: Run Tests
         run: ./vendor/bin/pest
@@ -146,6 +172,10 @@ jobs:
             rm -rf "$RELEASE_DIR/storage"
             ln -sfn /var/www/tegmen/shared/.env "$RELEASE_DIR/.env"
             ln -sfn /var/www/tegmen/shared/storage "$RELEASE_DIR/storage"
+
+            # Ensure www-data can write to bootstrap/cache
+            chown -R rapha:www-data "$RELEASE_DIR/bootstrap/cache"
+            chmod -R 775 "$RELEASE_DIR/bootstrap/cache"
 
             # Switch current release
             ln -sfn "$RELEASE_DIR" /var/www/tegmen/current

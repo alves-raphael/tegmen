@@ -29,9 +29,11 @@ new class extends Component {
 
     <div class="flex-1 overflow-y-auto">
         @forelse ($this->customers as $customer)
-            <div class="flex items-center justify-between px-4 py-2.5 {{ ! $loop->last ? 'border-b border-neutral-100 dark:border-neutral-800' : '' }}">
+            <div
+                class="flex items-center justify-between px-4 py-2.5 {{ !$loop->last ? 'border-b border-neutral-100 dark:border-neutral-800' : '' }}">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/40">
+                    <div
+                        class="flex size-8 shrink-0 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/40">
                         <span class="text-xs font-semibold text-pink-600 dark:text-pink-400">
                             {{ $customer->birth_date->format('d') }}
                         </span>
