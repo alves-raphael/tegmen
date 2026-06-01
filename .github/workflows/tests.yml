@@ -180,8 +180,9 @@ jobs:
             # Switch current release
             ln -sfn "$RELEASE_DIR" /var/www/tegmen/current
 
-            # Warm caches using production environment after .env is linked
+            # Run migrations and warm caches using production environment after .env is linked
             cd /var/www/tegmen/current
+            php artisan migrate --force
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
