@@ -20,6 +20,10 @@ new #[Title('Apólices')] class extends Component {
 
     public string $insurerFilter = '';
 
+    public string $endDateFrom = '';
+
+    public string $endDateTo = '';
+
     public bool $showCancelModal = false;
 
     public ?int $cancellingPolicyId = null;
@@ -31,6 +35,25 @@ new #[Title('Apólices')] class extends Component {
 
     public function updatedInsurerFilter(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedEndDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDateTo(): void
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->statusFilter = 'ACTIVE';
+        $this->insurerFilter = '';
+        $this->endDateFrom = '';
+        $this->endDateTo = '';
         $this->resetPage();
     }
 
@@ -62,6 +85,14 @@ new #[Title('Apólices')] class extends Component {
             ->when(
                 $this->insurerFilter !== '',
                 fn ($q) => $q->where('insurer_id', $this->insurerFilter)
+            )
+            ->when(
+                strlen($this->endDateFrom) === 10,
+                fn ($q) => $q->where('end_date', '>=', \Carbon\Carbon::createFromFormat('d/m/Y', $this->endDateFrom)->format('Y-m-d'))
+            )
+            ->when(
+                strlen($this->endDateTo) === 10,
+                fn ($q) => $q->where('end_date', '<=', \Carbon\Carbon::createFromFormat('d/m/Y', $this->endDateTo)->format('Y-m-d'))
             )
             ->orderBy('end_date', 'asc')
             ->paginate(15);
@@ -129,7 +160,7 @@ new #[Title('Apólices')] class extends Component {
         </flux:button>
     </div>
 
-    <div class="flex flex-col gap-4 sm:flex-row">
+    <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="w-full sm:w-52">
             <flux:select wire:model.live="statusFilter" :label="__('Status')">
                 <flux:select.option value="">{{ __('Todos os status') }}</flux:select.option>
@@ -148,6 +179,70 @@ new #[Title('Apólices')] class extends Component {
                 @endforeach
             </flux:select>
         </div>
+
+        <div x-data class="relative w-full sm:w-44">
+            <flux:input
+                wire:model.blur="endDateFrom"
+                x-on:input="maskDate($el)"
+                :label="__('Vencimento de')"
+                placeholder="DD/MM/AAAA"
+                maxlength="10"
+            >
+                <x-slot:iconTrailing>
+                    <button
+                        type="button"
+                        tabindex="-1"
+                        @click="$refs.pickerFrom.showPicker()"
+                        class="cursor-pointer text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                    >
+                        <flux:icon.calendar-days class="size-4" />
+                    </button>
+                </x-slot:iconTrailing>
+            </flux:input>
+            <input
+                type="date"
+                x-ref="pickerFrom"
+                tabindex="-1"
+                class="absolute bottom-0 left-0 h-px w-px opacity-0 pointer-events-none"
+                @change="const [y, m, d] = $event.target.value.split('-'); $wire.set('endDateFrom', d + '/' + m + '/' + y)"
+            />
+        </div>
+
+        <div x-data class="relative w-full sm:w-44">
+            <flux:input
+                wire:model.blur="endDateTo"
+                x-on:input="maskDate($el)"
+                :label="__('Vencimento até')"
+                placeholder="DD/MM/AAAA"
+                maxlength="10"
+            >
+                <x-slot:iconTrailing>
+                    <button
+                        type="button"
+                        tabindex="-1"
+                        @click="$refs.pickerTo.showPicker()"
+                        class="cursor-pointer text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                    >
+                        <flux:icon.calendar-days class="size-4" />
+                    </button>
+                </x-slot:iconTrailing>
+            </flux:input>
+            <input
+                type="date"
+                x-ref="pickerTo"
+                tabindex="-1"
+                class="absolute bottom-0 left-0 h-px w-px opacity-0 pointer-events-none"
+                @change="const [y, m, d] = $event.target.value.split('-'); $wire.set('endDateTo', d + '/' + m + '/' + y)"
+            />
+        </div>
+
+        @if ($statusFilter !== 'ACTIVE' || $insurerFilter !== '' || $endDateFrom !== '' || $endDateTo !== '')
+            <div class="sm:self-end">
+                <flux:button wire:click="clearFilters" variant="ghost" icon="x-mark">
+                    {{ __('Limpar filtros') }}
+                </flux:button>
+            </div>
+        @endif
     </div>
 
     <div class="overflow-x-auto">

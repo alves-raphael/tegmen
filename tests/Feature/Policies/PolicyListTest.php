@@ -253,6 +253,115 @@ test('clearing insurer filter shows all policies again', function () {
         ->assertSee($otherPolicy->policy_number);
 });
 
+test('end date from filter shows only policies expiring on or after date', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    $before = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(10)->toDateString(),
+    ]);
+
+    $after = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(60)->toDateString(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('endDateFrom', now()->addDays(30)->format('d/m/Y'))
+        ->assertDontSee($before->policy_number)
+        ->assertSee($after->policy_number);
+});
+
+test('end date to filter shows only policies expiring on or before date', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    $before = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(10)->toDateString(),
+    ]);
+
+    $after = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(60)->toDateString(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('endDateTo', now()->addDays(30)->format('d/m/Y'))
+        ->assertSee($before->policy_number)
+        ->assertDontSee($after->policy_number);
+});
+
+test('end date range filters policies between dates', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    $tooEarly = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $inRange = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(20)->toDateString(),
+    ]);
+
+    $tooLate = Policy::factory()->active()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'insurer_id' => $insurer->id,
+        'end_date' => now()->addDays(60)->toDateString(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('endDateFrom', now()->addDays(10)->format('d/m/Y'))
+        ->set('endDateTo', now()->addDays(30)->format('d/m/Y'))
+        ->assertDontSee($tooEarly->policy_number)
+        ->assertSee($inRange->policy_number)
+        ->assertDontSee($tooLate->policy_number);
+});
+
+test('clear filters resets all filters to defaults', function () {
+    $user = User::factory()->create();
+    $insurer = InsuranceCompany::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::policies.index')
+        ->set('statusFilter', 'CANCELLED')
+        ->set('insurerFilter', $insurer->id)
+        ->set('endDateFrom', now()->addDays(10)->format('d/m/Y'))
+        ->set('endDateTo', now()->addDays(30)->format('d/m/Y'))
+        ->call('clearFilters')
+        ->assertSet('statusFilter', 'ACTIVE')
+        ->assertSet('insurerFilter', '')
+        ->assertSet('endDateFrom', '')
+        ->assertSet('endDateTo', '');
+});
+
 test('all status filter shows all policies regardless of status', function () {
     $user = User::factory()->create();
     $insurer = InsuranceCompany::factory()->create();
