@@ -24,7 +24,6 @@ class CustomerFactory extends Factory
             'name' => fake()->firstName().' '.fake()->lastName(),
             'type' => CustomerType::Person,
             'document' => $this->validCpfDigits(),
-            'cpf' => null,
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('(##) #####-####'),
             'birth_date' => fake()->date(),

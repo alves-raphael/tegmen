@@ -47,12 +47,9 @@ new #[Title('Editar Cliente')] class extends Component {
         }
 
         $this->customer = $customer;
-        $this->type = $customer->type?->value ?? CustomerType::Person->value;
+        $this->type = $customer->type->value;
         $this->name = $customer->name;
-        $this->document = $this->formatDocument(
-            $customer->document ?? preg_replace('/\D/', '', (string) $customer->cpf),
-            $customer->type ?? CustomerType::Person
-        );
+        $this->document = $this->formatDocument($customer->document, $customer->type);
         $this->email = $customer->email;
         $this->phone = $customer->phone;
         $this->birth_date = $customer->birth_date?->format('d/m/Y') ?? '';
