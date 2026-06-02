@@ -270,3 +270,37 @@ test('successful save redirects to customer index', function () {
         ->call('save')
         ->assertRedirect(route('customers.index'));
 });
+
+test('duplicate document triggers validation error on document field', function () {
+    $user = User::factory()->create();
+    Customer::factory()->create(['user_id' => $user->id, 'document' => '52998224725']);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('type', 'person')
+        ->set('name', 'Outro Silva')
+        ->set('document', '529.982.247-25')
+        ->set('email', 'outro@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->set('birth_date', '15/01/1990')
+        ->call('save')
+        ->assertHasErrors('document');
+});
+
+test('duplicate document during save navigates back to step 1', function () {
+    $user = User::factory()->create();
+    Customer::factory()->create(['user_id' => $user->id, 'document' => '52998224725']);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('currentStep', 2)
+        ->set('type', 'person')
+        ->set('name', 'Outro Silva')
+        ->set('document', '529.982.247-25')
+        ->set('email', 'outro@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->set('birth_date', '15/01/1990')
+        ->call('save')
+        ->assertSet('currentStep', 1)
+        ->assertHasErrors('document');
+});

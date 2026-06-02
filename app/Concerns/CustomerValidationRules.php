@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Enums\CustomerType;
+use App\Rules\UniqueDocument;
 use App\Rules\ValidCnpj;
 use App\Rules\ValidCpf;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -21,8 +22,8 @@ trait CustomerValidationRules
             'type' => ['required', 'string', Rule::in([CustomerType::Person->value, CustomerType::Company->value])],
             'name' => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\p{L}\s\'\-]+$/u'],
             'document' => $isCompany
-                ? ['required', 'string', 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', new ValidCnpj]
-                : ['required', 'string', 'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/', new ValidCpf],
+                ? ['required', 'string', 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', new ValidCnpj, new UniqueDocument($this->customer->id ?? null)]
+                : ['required', 'string', 'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/', new ValidCpf, new UniqueDocument($this->customer->id ?? null)],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],
             'birth_date' => $isCompany

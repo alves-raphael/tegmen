@@ -8,6 +8,7 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -54,11 +55,19 @@ new #[Title('Novo Cliente')] class extends Component {
 
     public function save(): void
     {
-        $rules = $this->step1Rules();
-        if ($this->hasAddressData()) {
-            $rules += $this->step2Rules();
+        $rules = array_merge(
+            $this->step1Rules(),
+            $this->hasAddressData() ? $this->step2Rules() : [],
+        );
+
+        try {
+            $this->validate($rules);
+        } catch (ValidationException $e) {
+            if (array_intersect(array_keys($this->step1Rules()), array_keys($e->errors()))) {
+                $this->currentStep = 1;
+            }
+            throw $e;
         }
-        $this->validate($rules);
 
         try {
             DB::transaction(function () {

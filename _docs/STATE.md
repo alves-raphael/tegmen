@@ -1,5 +1,12 @@
 # State
 
+## 2026-06-02 — Duplicate document: proper error + navigate back to step 1
+
+- `UniqueDocument` custom rule: strips mask to digits, queries `customers.document`, accepts optional `$ignoreId` for edit flows
+- `CustomerValidationRules` trait: added `UniqueDocument` to `document` rules in `step1Rules()` (ignores current customer on edit via `$this->customer->id ?? null`)
+- Customer create `save()`: wrapped `validate()` in try/catch; if any step 1 field has an error, sets `$currentStep = 1` before re-throwing so Livewire renders the inline error in the right step
+- 53 customer tests passing (2 new: duplicate triggers field error; save from step 2 navigates back to step 1)
+
 ## 2026-06-02 — Vehicle model_year supports double year format (e.g. 2020/2021)
 
 - Migration widens `model_year` column from `VARCHAR(4)` to `VARCHAR(9)`
