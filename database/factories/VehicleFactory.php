@@ -33,4 +33,13 @@ class VehicleFactory extends Factory
             'color' => fake()->randomElement(array_keys(Vehicle::colorOptions())),
         ];
     }
+
+    public function doubleYear(): static
+    {
+        return $this->state(function () {
+            $year = fake()->numberBetween(2000, 2025);
+
+            return ['model_year' => "{$year}/".($year + 1)];
+        });
+    }
 }

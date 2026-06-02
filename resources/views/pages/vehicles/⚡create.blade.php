@@ -100,9 +100,10 @@ new #[Title('Novo Veículo')] class extends Component {
 
             <flux:input
                 wire:model.blur="model_year"
+                x-on:input="maskModelYear($el)"
                 :label="__('Ano do modelo')"
-                placeholder="2024"
-                maxlength="4"
+                :placeholder="__('2024 ou 2024/2025')"
+                maxlength="9"
                 required
             />
 

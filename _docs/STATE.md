@@ -1,5 +1,14 @@
 # State
 
+## 2026-06-02 — Vehicle model_year supports double year format (e.g. 2020/2021)
+
+- Migration widens `model_year` column from `VARCHAR(4)` to `VARCHAR(9)`
+- `ValidModelYear` custom rule: validates each year part is 1900–(current year+1); rejects second year < first year
+- `VehicleValidationRules` trait: replaced `digits:4/integer/min/max` with `regex:/^\d{4}(\/\d{4})?$/` + `ValidModelYear`
+- Create/Edit Livewire views: `maxlength` updated to 9, placeholder updated, `maskModelYear` JS auto-inserts `/` after 4th digit
+- `VehicleFactory`: added `doubleYear()` state generating `"YYYY/YYYY+1"` format
+- 39 vehicle tests passing (9 new tests covering double year accept/reject, boundary years, edit pre-population)
+
 ## 2026-06-01 — Customer CPF → Document + Type (CPF & CNPJ support)
 
 - Migration adds `document` (string 14, digits-only, unique), `type` (enum person/company) to customers; `cpf` and `birth_date` made nullable

@@ -118,6 +118,11 @@ window.maskLicensePlate = function (el) {
     el.setSelectionRange(newPos, newPos);
 };
 
+window.maskModelYear = function (el) {
+    const digits = el.value.replace(/[^\d]/g, '').slice(0, 8);
+    el.value = digits.length > 4 ? digits.slice(0, 4) + '/' + digits.slice(4) : digits;
+};
+
 /**
  * Submit guard directive: disables a button for 3 seconds after the first click.
  * Usage: add x-submit-guard to any <flux:button> or <button> element.

@@ -78,3 +78,27 @@ test('successful edit updates vehicle fields', function () {
     expect($vehicle->fresh()->license_plate)->toBe('XYZ-9999');
     expect($vehicle->fresh()->brand)->toBe('Fiat');
 });
+
+test('edit accepts double year format', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::vehicles.edit', ['customer' => $customer, 'vehicle' => $vehicle])
+        ->set('model_year', '2022/2023')
+        ->call('save')
+        ->assertHasNoErrors('model_year');
+
+    expect($vehicle->fresh()->model_year)->toBe('2022/2023');
+});
+
+test('edit pre-populates double year format correctly', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+    $vehicle = Vehicle::factory()->doubleYear()->create(['customer_id' => $customer->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::vehicles.edit', ['customer' => $customer, 'vehicle' => $vehicle])
+        ->assertSet('model_year', $vehicle->model_year);
+});
