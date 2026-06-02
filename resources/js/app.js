@@ -15,6 +15,20 @@ window.maskCpf = function (el) {
     el.setSelectionRange(newPos, newPos);
 };
 
+window.maskCnpj = function (el) {
+    const pos = el.selectionStart;
+    const prev = el.value;
+    let d = el.value.replace(/\D/g, '').slice(0, 14);
+    if (d.length > 12) d = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8, 12) + '-' + d.slice(12);
+    else if (d.length > 8) d = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8);
+    else if (d.length > 5) d = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5);
+    else if (d.length > 2) d = d.slice(0, 2) + '.' + d.slice(2);
+    el.value = d;
+    const diff = d.length - prev.length;
+    const newPos = Math.max(0, pos + diff);
+    el.setSelectionRange(newPos, newPos);
+};
+
 window.maskPhone = function (el) {
     const pos = el.selectionStart;
     const prev = el.value;

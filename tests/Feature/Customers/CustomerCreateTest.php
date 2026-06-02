@@ -35,15 +35,28 @@ test('name requires at least 2 characters to advance', function () {
         ->assertHasNoErrors('name');
 });
 
-test('cpf must be in correct format', function () {
+test('document must be in cpf format for pessoa fisica', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '12345678901')
+        ->set('document', '12345678901')
         ->call('nextStep')
-        ->assertHasErrors('cpf');
+        ->assertHasErrors('document');
+});
+
+test('document must be in cnpj format for pessoa juridica', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('type', 'company')
+        ->set('name', 'Empresa Ltda')
+        ->set('document', '12345678000190')
+        ->call('nextStep')
+        ->assertHasErrors('document');
 });
 
 test('email must be valid', function () {
@@ -51,8 +64,9 @@ test('email must be valid', function () {
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '123.456.789-01')
+        ->set('document', '123.456.789-01')
         ->set('email', 'not-an-email')
         ->call('nextStep')
         ->assertHasErrors('email');
@@ -68,14 +82,30 @@ test('phone must match mask format', function () {
         ->assertHasErrors('phone');
 });
 
-test('birth date must be in dd/mm/yyyy format', function () {
+test('birth date must be in dd/mm/yyyy format for pessoa fisica', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('birth_date', '1990-01-15')
         ->call('nextStep')
         ->assertHasErrors('birth_date');
+});
+
+test('birth date is not required for pessoa juridica', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('type', 'company')
+        ->set('name', 'Empresa Ltda')
+        ->set('document', '11.222.333/0001-81')
+        ->set('email', 'empresa@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->call('nextStep')
+        ->assertHasNoErrors('birth_date')
+        ->assertSet('currentStep', 2);
 });
 
 test('nextStep does not advance when step 1 has validation errors', function () {
@@ -87,13 +117,14 @@ test('nextStep does not advance when step 1 has validation errors', function () 
         ->assertSet('currentStep', 1);
 });
 
-test('nextStep advances to step 2 when step 1 is valid', function () {
+test('nextStep advances to step 2 when step 1 is valid for pessoa fisica', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
@@ -107,8 +138,9 @@ test('previousStep returns to step 1', function () {
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
@@ -123,8 +155,9 @@ test('save validates step 2 address fields when partial data is provided', funct
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
@@ -139,8 +172,9 @@ test('save without address creates customer with no address records', function (
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
@@ -152,13 +186,52 @@ test('save without address creates customer with no address records', function (
     expect(Address::where('customer_id', $customer->id)->count())->toBe(0);
 });
 
+test('save stores document as digits only', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('type', 'person')
+        ->set('name', 'João Silva')
+        ->set('document', '529.982.247-25')
+        ->set('email', 'joao@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->set('birth_date', '15/01/1990')
+        ->call('nextStep')
+        ->call('save');
+
+    $customer = Customer::where('email', 'joao@example.com')->first();
+    expect($customer->document)->toBe('52998224725');
+    expect($customer->type->value)->toBe('person');
+});
+
+test('save company stores cnpj digits and type', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.create')
+        ->set('type', 'company')
+        ->set('name', 'Empresa Ltda')
+        ->set('document', '11.222.333/0001-81')
+        ->set('email', 'empresa@example.com')
+        ->set('phone', '(11) 98765-4321')
+        ->call('nextStep')
+        ->call('save');
+
+    $customer = Customer::where('email', 'empresa@example.com')->first();
+    expect($customer->document)->toBe('11222333000181');
+    expect($customer->type->value)->toBe('company');
+    expect($customer->birth_date)->toBeNull();
+});
+
 test('successful save creates customer and address', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')
@@ -182,8 +255,9 @@ test('successful save redirects to customer index', function () {
 
     Livewire::actingAs($user)
         ->test('pages::customers.create')
+        ->set('type', 'person')
         ->set('name', 'João Silva')
-        ->set('cpf', '529.982.247-25')
+        ->set('document', '529.982.247-25')
         ->set('email', 'joao@example.com')
         ->set('phone', '(11) 98765-4321')
         ->set('birth_date', '15/01/1990')

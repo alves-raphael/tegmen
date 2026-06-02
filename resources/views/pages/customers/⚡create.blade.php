@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\CustomerValidationRules;
+use App\Enums\CustomerType;
 use App\Models\Customer;
 use Carbon\Carbon;
 use Flux\Flux;
@@ -17,8 +18,9 @@ new #[Title('Novo Cliente')] class extends Component {
     public int $currentStep = 1;
 
     // Step 1 — customer data
+    public string $type = 'person';
     public string $name = '';
-    public string $cpf = '';
+    public string $document = '';
     public string $email = '';
     public string $phone = '';
     public string $birth_date = '';
@@ -31,6 +33,13 @@ new #[Title('Novo Cliente')] class extends Component {
     public string $city = '';
     public string $number = '';
     public string $complement = '';
+
+    public function updatedType(): void
+    {
+        $this->document = '';
+        $this->birth_date = '';
+        $this->resetValidation(['document', 'birth_date']);
+    }
 
     public function nextStep(): void
     {
@@ -56,10 +65,13 @@ new #[Title('Novo Cliente')] class extends Component {
                 $customer = Customer::create([
                     'user_id' => Auth::id(),
                     'name' => Str::title($this->name),
-                    'cpf' => $this->cpf,
+                    'document' => preg_replace('/\D/', '', $this->document),
+                    'type' => $this->type,
                     'email' => $this->email,
                     'phone' => $this->phone,
-                    'birth_date' => Carbon::createFromFormat('d/m/Y', $this->birth_date)->toDateString(),
+                    'birth_date' => $this->birth_date
+                        ? Carbon::createFromFormat('d/m/Y', $this->birth_date)->toDateString()
+                        : null,
                 ]);
 
                 if ($this->hasAddressData()) {
@@ -132,20 +144,27 @@ new #[Title('Novo Cliente')] class extends Component {
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
+                    <flux:radio.group wire:model.live="type" :label="__('Tipo de pessoa')">
+                        <flux:radio value="person" :label="__('Pessoa Física')" />
+                        <flux:radio value="company" :label="__('Pessoa Jurídica')" />
+                    </flux:radio.group>
+                </div>
+
+                <div class="sm:col-span-2">
                     <flux:input
                         wire:model.blur="name"
                         :label="__('Nome completo')"
-                        :placeholder="__('João da Silva')"
+                        :placeholder="$type === 'person' ? __('João da Silva') : __('Razão Social')"
                         required
                         autofocus
                     />
                 </div>
 
                 <flux:input
-                    wire:model.blur="cpf"
-                    x-on:input="maskCpf($el)"
-                    :label="__('CPF')"
-                    placeholder="000.000.000-00"
+                    wire:model.blur="document"
+                    x-on:input="$wire.type === 'company' ? maskCnpj($el) : maskCpf($el)"
+                    :label="$type === 'person' ? __('CPF') : __('CNPJ')"
+                    :placeholder="$type === 'person' ? '000.000.000-00' : '00.000.000/0000-00'"
                     required
                 />
 
@@ -165,19 +184,20 @@ new #[Title('Novo Cliente')] class extends Component {
                     required
                 />
 
-                <flux:input
-                    wire:model.blur="birth_date"
-                    x-on:input="maskDate($el)"
-                    :label="__('Data de nascimento')"
-                    placeholder="DD/MM/AAAA"
-                    required
-                />
+                @if ($type === 'person')
+                    <flux:input
+                        wire:model.blur="birth_date"
+                        x-on:input="maskDate($el)"
+                        :label="__('Data de nascimento')"
+                        placeholder="DD/MM/AAAA"
+                        required
+                    />
+                @endif
             </div>
 
             <div class="flex justify-end">
-                <flux:button variant="primary" wire:click="nextStep">
+                <flux:button variant="primary" wire:click="nextStep" icon-trailing="arrow-right">
                     {{ __('Próximo') }}
-                    <x-flux::icon.arrow-right class="size-4" />
                 </flux:button>
             </div>
             </div>

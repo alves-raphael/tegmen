@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CustomerType;
 use App\Models\Address;
 use App\Models\Customer;
 use App\Models\User;
@@ -29,7 +30,31 @@ test('edit form is pre-populated with customer data', function () {
         ->test('pages::customers.edit', ['customer' => $customer])
         ->assertSet('name', $customer->name)
         ->assertSet('email', $customer->email)
-        ->assertSet('cpf', $customer->cpf);
+        ->assertSet('type', CustomerType::Person->value);
+});
+
+test('edit form pre-populates document formatted for cpf', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->create([
+        'user_id' => $user->id,
+        'type' => CustomerType::Person,
+        'document' => '52998224725',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.edit', ['customer' => $customer])
+        ->assertSet('document', '529.982.247-25');
+});
+
+test('edit form pre-populates document formatted for cnpj', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->company()->create(['user_id' => $user->id]);
+
+    $formatted = preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $customer->document);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.edit', ['customer' => $customer])
+        ->assertSet('document', $formatted);
 });
 
 test('edit form is pre-populated with active address', function () {
@@ -97,4 +122,17 @@ test('successful update changes customer fields', function () {
         ->call('save');
 
     expect($customer->fresh()->name)->toBe('Nome Atualizado');
+});
+
+test('save stores document as digits only on update', function () {
+    $user = User::factory()->create();
+    $customer = Customer::factory()->create(['user_id' => $user->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::customers.edit', ['customer' => $customer])
+        ->set('document', '529.982.247-25')
+        ->call('nextStep')
+        ->call('save');
+
+    expect($customer->fresh()->document)->toBe('52998224725');
 });

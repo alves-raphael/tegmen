@@ -1,5 +1,17 @@
 # State
 
+## 2026-06-01 — Customer CPF → Document + Type (CPF & CNPJ support)
+
+- Migration adds `document` (string 14, digits-only, unique), `type` (enum person/company) to customers; `cpf` and `birth_date` made nullable
+- `CustomerType` enum (`Person`/`Company`) with `label()` helper
+- `ValidCnpj` rule mirrors `ValidCpf` (14-digit algorithm, strips mask before checking)
+- `customers:migrate-cpf-to-document` Artisan command: copies `cpf` digits to `document`, sets `type = 'person'`; idempotent via chunk
+- `CustomerValidationRules` trait: dynamic `document` regex + rule based on `type`; `birth_date` nullable for companies
+- Create/Edit Livewire pages: `cpf` property replaced with `document` + `type`; type radio toggles CPF/CNPJ label, placeholder, and JS mask; `birth_date` hidden for companies; digits stripped before DB write; edit `mount()` formats stored digits back for display
+- `CustomerFactory`: default state uses `document` (CPF digits), `cpf = null`; new `company()` state with CNPJ digits
+- `maskCnpj` JS helper added (`##.###.###/####-##` format)
+- 166 tests passing (20 new/updated customer tests + 5 migration command tests)
+
 ## 2026-04-23 — CI artifact packaging snapshot fix
 
 - Updated `tests.yml` artifact step to use `set -euo pipefail`

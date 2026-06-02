@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CustomerType;
 use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'name', 'cpf', 'email', 'phone', 'birth_date'])]
+#[Fillable(['user_id', 'name', 'cpf', 'document', 'type', 'email', 'phone', 'birth_date'])]
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
@@ -23,6 +24,7 @@ class Customer extends Model
     {
         return [
             'birth_date' => 'date',
+            'type' => CustomerType::class,
         ];
     }
 

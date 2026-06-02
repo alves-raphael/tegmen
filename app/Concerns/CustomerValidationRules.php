@@ -2,8 +2,11 @@
 
 namespace App\Concerns;
 
+use App\Enums\CustomerType;
+use App\Rules\ValidCnpj;
 use App\Rules\ValidCpf;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Rule;
 
 trait CustomerValidationRules
 {
@@ -12,12 +15,19 @@ trait CustomerValidationRules
      */
     protected function step1Rules(): array
     {
+        $isCompany = $this->type === CustomerType::Company->value;
+
         return [
+            'type' => ['required', 'string', Rule::in([CustomerType::Person->value, CustomerType::Company->value])],
             'name' => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\p{L}\s\'\-]+$/u'],
-            'cpf' => ['required', 'string', 'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/', new ValidCpf],
+            'document' => $isCompany
+                ? ['required', 'string', 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', new ValidCnpj]
+                : ['required', 'string', 'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/', new ValidCpf],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],
-            'birth_date' => ['required', 'string', 'date_format:d/m/Y'],
+            'birth_date' => $isCompany
+                ? ['nullable', 'string', 'date_format:d/m/Y']
+                : ['required', 'string', 'date_format:d/m/Y'],
         ];
     }
 

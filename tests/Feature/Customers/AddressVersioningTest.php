@@ -13,10 +13,8 @@ test('changing address deactivates old and creates new active record', function 
     Livewire::actingAs($user)
         ->test('pages::customers.edit', ['customer' => $customer])
         ->set('name', $customer->name)
-        ->set('cpf', $customer->cpf)
         ->set('email', $customer->email)
         ->set('phone', $customer->phone)
-        ->set('birth_date', $customer->birth_date->format('d/m/Y'))
         ->call('nextStep')
         ->set('street', 'Rua Nova')
         ->set('zip_code', '01310-100')
@@ -49,10 +47,8 @@ test('unchanged address does not create a new record', function () {
     Livewire::actingAs($user)
         ->test('pages::customers.edit', ['customer' => $customer])
         ->set('name', $customer->name)
-        ->set('cpf', $customer->cpf)
         ->set('email', $customer->email)
         ->set('phone', $customer->phone)
-        ->set('birth_date', $customer->birth_date->format('d/m/Y'))
         ->call('nextStep')
         ->call('save');
 
@@ -65,14 +61,11 @@ test('customer always has at most one active address', function () {
     $customer = Customer::factory()->create(['user_id' => $user->id]);
     Address::factory()->create(['customer_id' => $customer->id, 'street' => 'Rua 1', 'status' => true]);
 
-    // First address change
     Livewire::actingAs($user)
         ->test('pages::customers.edit', ['customer' => $customer])
         ->set('name', $customer->name)
-        ->set('cpf', $customer->cpf)
         ->set('email', $customer->email)
         ->set('phone', $customer->phone)
-        ->set('birth_date', $customer->birth_date->format('d/m/Y'))
         ->call('nextStep')
         ->set('street', 'Rua 2')
         ->set('zip_code', '01310-100')

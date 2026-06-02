@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\CustomerValidationRules;
+use App\Enums\CustomerType;
 use App\Models\Customer;
 use Carbon\Carbon;
 use Flux\Flux;
@@ -18,8 +19,9 @@ new #[Title('Editar Cliente')] class extends Component {
     public int $currentStep = 1;
 
     // Step 1 — customer data
+    public string $type = 'person';
     public string $name = '';
-    public string $cpf = '';
+    public string $document = '';
     public string $email = '';
     public string $phone = '';
     public string $birth_date = '';
@@ -45,11 +47,15 @@ new #[Title('Editar Cliente')] class extends Component {
         }
 
         $this->customer = $customer;
+        $this->type = $customer->type?->value ?? CustomerType::Person->value;
         $this->name = $customer->name;
-        $this->cpf = $customer->cpf;
+        $this->document = $this->formatDocument(
+            $customer->document ?? preg_replace('/\D/', '', (string) $customer->cpf),
+            $customer->type ?? CustomerType::Person
+        );
         $this->email = $customer->email;
         $this->phone = $customer->phone;
-        $this->birth_date = $customer->birth_date->format('d/m/Y');
+        $this->birth_date = $customer->birth_date?->format('d/m/Y') ?? '';
 
         $address = $customer->activeAddress;
         if ($address) {
@@ -61,6 +67,13 @@ new #[Title('Editar Cliente')] class extends Component {
             $this->number = $address->number;
             $this->complement = $address->complement ?? '';
         }
+    }
+
+    public function updatedType(): void
+    {
+        $this->document = '';
+        $this->birth_date = '';
+        $this->resetValidation(['document', 'birth_date']);
     }
 
     public function nextStep(): void
@@ -96,10 +109,13 @@ new #[Title('Editar Cliente')] class extends Component {
         try {
             $this->customer->update([
                 'name' => Str::title($this->name),
-                'cpf' => $this->cpf,
+                'document' => preg_replace('/\D/', '', $this->document),
+                'type' => $this->type,
                 'email' => $this->email,
                 'phone' => $this->phone,
-                'birth_date' => Carbon::createFromFormat('d/m/Y', $this->birth_date)->toDateString(),
+                'birth_date' => $this->birth_date
+                    ? Carbon::createFromFormat('d/m/Y', $this->birth_date)->toDateString()
+                    : null,
             ]);
 
             $this->updateAddress();
@@ -143,6 +159,21 @@ new #[Title('Editar Cliente')] class extends Component {
             $this->customer->addresses()->where('status', true)->update(['status' => false]);
             $this->customer->addresses()->create([...$addressData, 'status' => true]);
         }
+    }
+
+    private function formatDocument(string $digits, CustomerType $type): string
+    {
+        $digits = preg_replace('/\D/', '', $digits);
+
+        if ($type === CustomerType::Company && strlen($digits) === 14) {
+            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $digits);
+        }
+
+        if (strlen($digits) === 11) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $digits);
+        }
+
+        return $digits;
     }
 }; ?>
 
@@ -188,20 +219,27 @@ new #[Title('Editar Cliente')] class extends Component {
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
+                    <flux:radio.group wire:model.live="type" :label="__('Tipo de pessoa')">
+                        <flux:radio value="person" :label="__('Pessoa Física')" />
+                        <flux:radio value="company" :label="__('Pessoa Jurídica')" />
+                    </flux:radio.group>
+                </div>
+
+                <div class="sm:col-span-2">
                     <flux:input
                         wire:model.blur="name"
                         :label="__('Nome completo')"
-                        :placeholder="__('João da Silva')"
+                        :placeholder="$type === 'person' ? __('João da Silva') : __('Razão Social')"
                         required
                         autofocus
                     />
                 </div>
 
                 <flux:input
-                    wire:model.blur="cpf"
-                    x-on:input="maskCpf($el)"
-                    :label="__('CPF')"
-                    placeholder="000.000.000-00"
+                    wire:model.blur="document"
+                    x-on:input="$wire.type === 'company' ? maskCnpj($el) : maskCpf($el)"
+                    :label="$type === 'person' ? __('CPF') : __('CNPJ')"
+                    :placeholder="$type === 'person' ? '000.000.000-00' : '00.000.000/0000-00'"
                     required
                 />
 
@@ -221,13 +259,15 @@ new #[Title('Editar Cliente')] class extends Component {
                     required
                 />
 
-                <flux:input
-                    wire:model.blur="birth_date"
-                    x-on:input="maskDate($el)"
-                    :label="__('Data de nascimento')"
-                    placeholder="DD/MM/AAAA"
-                    required
-                />
+                @if ($type === 'person')
+                    <flux:input
+                        wire:model.blur="birth_date"
+                        x-on:input="maskDate($el)"
+                        :label="__('Data de nascimento')"
+                        placeholder="DD/MM/AAAA"
+                        required
+                    />
+                @endif
             </div>
 
             <div class="flex justify-end">
